@@ -1,0 +1,23 @@
+{
+  "name": "auditshield",
+  "version": "1.0.0",
+  "description": "Verifiable Smart Contract Auditor powered by OpenGradient x402 TEE",
+  "type": "module",
+  "scripts": {
+    "start": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "backend": "node backend/server.js",
+    "frontend": "npx serve . -p 3000",
+    "deploy": "hardhat run scripts/deploy.js --network baseSepolia"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.1",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "concurrently": "^8.2.2",
+    "hardhat": "^2.22.0"
+  }
+}

@@ -1,0 +1,1871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AuditShield — Verifiable Smart Contract Security</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=Playfair+Display:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.2/ethers.umd.min.js"></script>
+  <style>
+    :root {
+      --cream: #F5F0E8;
+      --cream-dark: #EDE8DC;
+      --cream-border: #DDD5C4;
+      --brown-deep: #2C1810;
+      --brown-dark: #3D2314;
+      --brown-mid: #6B3A2A;
+      --brown-light: #8B5E4A;
+      --gold: #C4963A;
+      --gold-light: #D4A84A;
+      --gold-pale: #F0E0B0;
+      --text-primary: #2C1810;
+      --text-secondary: #6B3A2A;
+      --text-muted: #9A7060;
+      --critical: #C0392B;
+      --critical-bg: #FDECEA;
+      --high: #D35400;
+      --high-bg: #FEF0E7;
+      --medium: #B7950B;
+      --medium-bg: #FEF9E7;
+      --low: #1A5276;
+      --low-bg: #EBF5FB;
+      --safe: #1D6A39;
+      --safe-bg: #EAFAF1;
+      --info: #5D6D7E;
+      --info-bg: #F2F3F4;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Cormorant Garamond', serif;
+      background: var(--cream);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--brown-deep);
+      border-bottom: 2px solid var(--gold);
+      padding: 0 2rem;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .shield-logo {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+      border-radius: 6px 6px 14px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 2px 8px rgba(196, 150, 58, 0.4);
+    }
+
+    .brand-text h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--cream);
+      letter-spacing: 0.02em;
+      line-height: 1.1;
+    }
+
+    .brand-text span {
+      font-size: 0.65rem;
+      color: var(--gold);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 500;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .network-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(196, 150, 58, 0.12);
+      border: 1px solid rgba(196, 150, 58, 0.35);
+      padding: 0.3rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      color: var(--gold-light);
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+    }
+
+    .network-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--gold);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .btn-history {
+      background: transparent;
+      border: 1px solid rgba(196, 150, 58, 0.4);
+      color: var(--gold-light);
+      padding: 0.4rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.85rem;
+      letter-spacing: 0.06em;
+      transition: all 0.2s;
+    }
+    .btn-history:hover {
+      background: rgba(196, 150, 58, 0.1);
+      border-color: var(--gold);
+    }
+
+    .btn-connect {
+      background: var(--gold);
+      border: none;
+      color: var(--brown-deep);
+      padding: 0.45rem 1.25rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: 'Playfair Display', serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      transition: all 0.2s;
+    }
+    .btn-connect:hover {
+      background: var(--gold-light);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(196, 150, 58, 0.35);
+    }
+    .btn-connect.connected {
+      background: rgba(196, 150, 58, 0.15);
+      color: var(--gold-light);
+      border: 1px solid rgba(196, 150, 58, 0.4);
+    }
+
+    .opg-balance {
+      display: none;
+      align-items: center;
+      gap: 0.35rem;
+      background: rgba(29, 106, 57, 0.15);
+      border: 1px solid rgba(29, 106, 57, 0.35);
+      padding: 0.3rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      color: #4CAF7D;
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+    .opg-balance.visible { display: flex; }
+
+    /* ── NETWORK WARNING ── */
+    #networkWarning {
+      display: none;
+      background: linear-gradient(135deg, #7B3F00, #5C2E00);
+      border-bottom: 1px solid var(--high);
+      padding: 0.75rem 2rem;
+      text-align: center;
+      color: #FFD580;
+      font-size: 0.9rem;
+      letter-spacing: 0.03em;
+    }
+    #networkWarning button {
+      margin-left: 1rem;
+      background: var(--gold);
+      color: var(--brown-deep);
+      border: none;
+      padding: 0.3rem 0.85rem;
+      border-radius: 3px;
+      cursor: pointer;
+      font-family: 'Playfair Display', serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(180deg, var(--brown-deep) 0%, var(--brown-dark) 60%, var(--cream-dark) 100%);
+      padding: 3.5rem 2rem 3rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(ellipse at 20% 50%, rgba(196, 150, 58, 0.06) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 50%, rgba(196, 150, 58, 0.06) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .hero-tag {
+      display: inline-block;
+      background: rgba(196, 150, 58, 0.12);
+      border: 1px solid rgba(196, 150, 58, 0.3);
+      color: var(--gold);
+      font-size: 0.68rem;
+      letter-spacing: 0.18em;
+      padding: 0.35rem 1.2rem;
+      border-radius: 20px;
+      margin-bottom: 1.5rem;
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 600;
+    }
+
+    .hero h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 700;
+      color: var(--cream);
+      line-height: 1.15;
+      margin-bottom: 1rem;
+      letter-spacing: -0.01em;
+    }
+
+    .hero h2 em {
+      font-style: italic;
+      color: var(--gold-light);
+    }
+
+    .hero p {
+      color: rgba(245, 240, 232, 0.65);
+      font-size: 1.1rem;
+      max-width: 560px;
+      margin: 0 auto 2rem;
+      font-weight: 400;
+    }
+
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: 0;
+      flex-wrap: wrap;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .stat-item {
+      padding: 0.85rem 2rem;
+      border-right: 1px solid rgba(196, 150, 58, 0.2);
+      text-align: center;
+    }
+    .stat-item:last-child { border-right: none; }
+
+    .stat-label {
+      display: block;
+      font-size: 0.65rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gold);
+      font-weight: 600;
+      margin-bottom: 0.15rem;
+    }
+
+    .stat-value {
+      display: block;
+      font-family: 'Playfair Display', serif;
+      font-size: 0.9rem;
+      color: var(--cream);
+      font-weight: 500;
+    }
+
+    /* ── MAIN LAYOUT ── */
+    main {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 2.5rem 2rem 4rem;
+      display: grid;
+      grid-template-columns: 1fr 1.15fr;
+      gap: 2rem;
+      align-items: start;
+    }
+
+    @media (max-width: 900px) {
+      main { grid-template-columns: 1fr; }
+    }
+
+    /* ── PANELS ── */
+    .panel {
+      background: #FDFAF5;
+      border: 1px solid var(--cream-border);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 16px rgba(44, 24, 16, 0.07);
+    }
+
+    .panel-header {
+      background: linear-gradient(135deg, var(--brown-dark), var(--brown-deep));
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .panel-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 0.95rem;
+      color: var(--cream);
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+
+    .panel-badge {
+      background: rgba(196, 150, 58, 0.2);
+      border: 1px solid rgba(196, 150, 58, 0.35);
+      color: var(--gold);
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      padding: 0.2rem 0.6rem;
+      border-radius: 10px;
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 600;
+    }
+
+    .panel-body {
+      padding: 1.5rem;
+    }
+
+    /* ── FORM ELEMENTS ── */
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      font-weight: 600;
+      margin-bottom: 0.45rem;
+      font-family: 'Cormorant Garamond', serif;
+    }
+
+    input[type="text"], select, textarea {
+      width: 100%;
+      background: var(--cream);
+      border: 1px solid var(--cream-border);
+      border-radius: 4px;
+      padding: 0.65rem 0.9rem;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1rem;
+      color: var(--text-primary);
+      transition: border-color 0.2s, box-shadow 0.2s;
+      appearance: none;
+    }
+
+    input[type="text"]:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(196, 150, 58, 0.12);
+    }
+
+    input[type="text"].error-flash {
+      border-color: var(--critical);
+      box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.12);
+      animation: errorShake 0.4s ease;
+    }
+
+    @keyframes errorShake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-4px); }
+      75% { transform: translateX(4px); }
+    }
+
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B3A2A' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.9rem center;
+      padding-right: 2.5rem;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 200px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      line-height: 1.6;
+    }
+
+    textarea.context-area {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1rem;
+      min-height: 80px;
+    }
+
+    .char-hint {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 0.3rem;
+      font-family: 'Cormorant Garamond', serif;
+    }
+
+    /* ── AUDIT BUTTON ── */
+    .btn-audit {
+      width: 100%;
+      background: var(--brown-deep);
+      color: var(--cream);
+      border: 2px solid var(--brown-dark);
+      padding: 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      margin-top: 0.5rem;
+    }
+    .btn-audit:hover:not(:disabled) {
+      background: var(--brown-mid);
+      border-color: var(--gold);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(44, 24, 16, 0.25);
+    }
+    .btn-audit:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .panel-footer {
+      padding: 0.85rem 1.5rem;
+      background: var(--cream-dark);
+      border-top: 1px solid var(--cream-border);
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+      text-align: center;
+      font-family: 'Cormorant Garamond', serif;
+    }
+
+    /* ── RESULTS PANEL STATES ── */
+
+    /* Empty state */
+    .results-empty {
+      padding: 4rem 2rem;
+      text-align: center;
+    }
+
+    .shield-icon-large {
+      width: 72px;
+      height: 72px;
+      background: linear-gradient(135deg, var(--cream-dark), var(--cream-border));
+      border-radius: 10px 10px 28px 28px;
+      margin: 0 auto 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+    }
+
+    .results-empty h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+    }
+
+    .results-empty p {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      max-width: 280px;
+      margin: 0 auto;
+    }
+
+    /* Loading state */
+    .results-loading {
+      padding: 3rem 2rem;
+      text-align: center;
+    }
+
+    .loader-rings {
+      position: relative;
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 1.5rem;
+    }
+
+    .loader-rings::before,
+    .loader-rings::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      border: 2px solid transparent;
+    }
+    .loader-rings::before {
+      inset: 0;
+      border-top-color: var(--gold);
+      animation: spin 1s linear infinite;
+    }
+    .loader-rings::after {
+      inset: 10px;
+      border-top-color: var(--brown-light);
+      animation: spin 1.5s linear infinite reverse;
+    }
+
+    .loader-inner {
+      position: absolute;
+      inset: 22px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-light));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.2rem;
+      color: var(--text-primary);
+      margin-bottom: 1.5rem;
+    }
+
+    .audit-log {
+      background: var(--brown-deep);
+      border-radius: 6px;
+      padding: 1rem 1.25rem;
+      text-align: left;
+      min-height: 160px;
+    }
+
+    .audit-log-line {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--gold);
+      line-height: 1.8;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: all 0.3s;
+    }
+    .audit-log-line.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .audit-log-line.dim { color: rgba(196, 150, 58, 0.5); }
+
+    .cursor-blink {
+      display: inline-block;
+      width: 8px;
+      height: 14px;
+      background: var(--gold);
+      margin-left: 4px;
+      vertical-align: middle;
+      animation: blink 1s steps(1) infinite;
+    }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+    /* Results state */
+    .results-content {
+      padding: 1.5rem;
+    }
+
+    /* Score circle */
+    .score-section {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--cream-border);
+    }
+
+    .score-circle {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border: 3px solid;
+      flex-shrink: 0;
+    }
+    .score-circle.critical { border-color: var(--critical); background: var(--critical-bg); }
+    .score-circle.high     { border-color: var(--high);     background: var(--high-bg); }
+    .score-circle.medium   { border-color: var(--medium);   background: var(--medium-bg); }
+    .score-circle.low      { border-color: var(--low);      background: var(--low-bg); }
+    .score-circle.safe     { border-color: var(--safe);     background: var(--safe-bg); }
+
+    .score-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .score-circle.critical .score-num { color: var(--critical); }
+    .score-circle.high     .score-num { color: var(--high); }
+    .score-circle.medium   .score-num { color: var(--medium); }
+    .score-circle.low      .score-num { color: var(--low); }
+    .score-circle.safe     .score-num { color: var(--safe); }
+
+    .score-label {
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .score-info h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .score-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .chain-badge {
+      background: var(--brown-deep);
+      color: var(--gold);
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      padding: 0.2rem 0.6rem;
+      border-radius: 3px;
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 600;
+    }
+
+    .timestamp-text {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    /* Severity pills */
+    .severity-pills {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.25rem;
+    }
+
+    .pill {
+      padding: 0.25rem 0.7rem;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      font-family: 'Cormorant Garamond', serif;
+      border: 1px solid;
+    }
+    .pill.critical { background: var(--critical-bg); color: var(--critical); border-color: var(--critical); }
+    .pill.high     { background: var(--high-bg);     color: var(--high);     border-color: var(--high); }
+    .pill.medium   { background: var(--medium-bg);   color: var(--medium);   border-color: var(--medium); }
+    .pill.low      { background: var(--low-bg);      color: var(--low);      border-color: var(--low); }
+    .pill.info     { background: var(--info-bg);     color: var(--info);     border-color: var(--info); }
+
+    /* TEE attestation box */
+    .tee-box {
+      background: linear-gradient(135deg, rgba(196, 150, 58, 0.06), rgba(196, 150, 58, 0.02));
+      border: 1px solid rgba(196, 150, 58, 0.35);
+      border-radius: 6px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .tee-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+
+    .tee-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--gold);
+      font-weight: 700;
+      font-family: 'Cormorant Garamond', serif;
+    }
+
+    .tee-verified {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.7rem;
+      color: var(--safe);
+      font-weight: 600;
+    }
+
+    .tee-id {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--text-primary);
+      word-break: break-all;
+      margin-bottom: 0.5rem;
+    }
+
+    .tx-link {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--gold);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .tx-link:hover { text-decoration: underline; }
+
+    .onchain-confirm {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      color: var(--safe);
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+      padding: 0.5rem 0.75rem;
+      background: var(--safe-bg);
+      border-radius: 4px;
+      border: 1px solid rgba(29, 106, 57, 0.2);
+    }
+
+    /* Finding cards */
+    .findings-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .finding-card {
+      border: 1px solid var(--cream-border);
+      border-radius: 5px;
+      margin-bottom: 0.6rem;
+      overflow: hidden;
+      transition: box-shadow 0.2s;
+    }
+    .finding-card:hover { box-shadow: 0 2px 8px rgba(44, 24, 16, 0.08); }
+
+    .finding-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      background: #FDFAF5;
+      user-select: none;
+    }
+    .finding-header:hover { background: var(--cream-dark); }
+
+    .finding-sev {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      padding: 0.18rem 0.5rem;
+      border-radius: 3px;
+      flex-shrink: 0;
+      font-family: 'Cormorant Garamond', serif;
+      border: 1px solid;
+    }
+    .finding-sev.critical { background: var(--critical-bg); color: var(--critical); border-color: var(--critical); }
+    .finding-sev.high     { background: var(--high-bg);     color: var(--high);     border-color: var(--high); }
+    .finding-sev.medium   { background: var(--medium-bg);   color: var(--medium);   border-color: var(--medium); }
+    .finding-sev.low      { background: var(--low-bg);      color: var(--low);      border-color: var(--low); }
+    .finding-sev.info     { background: var(--info-bg);     color: var(--info);     border-color: var(--info); }
+
+    .finding-title {
+      flex: 1;
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      font-family: 'Cormorant Garamond', serif;
+    }
+
+    .finding-id {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--text-muted);
+    }
+
+    .finding-chevron {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      transition: transform 0.2s;
+    }
+    .finding-card.expanded .finding-chevron { transform: rotate(180deg); }
+
+    .finding-body {
+      display: none;
+      padding: 1rem;
+      background: var(--cream);
+      border-top: 1px solid var(--cream-border);
+    }
+    .finding-card.expanded .finding-body { display: block; }
+
+    .finding-field {
+      margin-bottom: 0.85rem;
+    }
+    .finding-field:last-child { margin-bottom: 0; }
+
+    .finding-field-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+      font-family: 'Cormorant Garamond', serif;
+    }
+
+    .finding-field-value {
+      font-size: 0.9rem;
+      color: var(--text-primary);
+      line-height: 1.55;
+    }
+
+    .code-snippet {
+      background: var(--brown-deep);
+      color: var(--gold-light);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      padding: 0.65rem 0.9rem;
+      border-radius: 4px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.6;
+    }
+
+    /* Executive summary */
+    .executive-summary {
+      background: linear-gradient(135deg, var(--cream-dark), var(--cream));
+      border: 1px solid var(--cream-border);
+      border-radius: 5px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .exec-text {
+      font-size: 0.95rem;
+      color: var(--text-primary);
+      line-height: 1.65;
+      font-style: italic;
+    }
+
+    /* Positive findings */
+    .positives-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .positives-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+      color: var(--text-primary);
+      padding: 0.35rem 0;
+      border-bottom: 1px solid var(--cream-border);
+    }
+    .positives-list li:last-child { border-bottom: none; }
+    .positives-list li::before {
+      content: '✓';
+      color: var(--safe);
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 0.05rem;
+    }
+
+    .btn-view-history {
+      width: 100%;
+      background: transparent;
+      border: 1px solid var(--brown-light);
+      color: var(--text-secondary);
+      padding: 0.7rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: 'Playfair Display', serif;
+      font-size: 0.9rem;
+      letter-spacing: 0.05em;
+      transition: all 0.2s;
+      margin-top: 1rem;
+    }
+    .btn-view-history:hover {
+      background: var(--cream-dark);
+      border-color: var(--gold);
+      color: var(--text-primary);
+    }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(44, 24, 16, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: #FDFAF5;
+      border-radius: 8px;
+      width: 100%;
+      max-width: 680px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 24px 80px rgba(44, 24, 16, 0.35);
+      border: 1px solid var(--cream-border);
+    }
+
+    .modal-header {
+      background: linear-gradient(135deg, var(--brown-dark), var(--brown-deep));
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-radius: 8px 8px 0 0;
+    }
+
+    .modal-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem;
+      color: var(--cream);
+      font-weight: 600;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: rgba(245, 240, 232, 0.6);
+      font-size: 1.4rem;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0;
+      transition: color 0.2s;
+    }
+    .modal-close:hover { color: var(--cream); }
+
+    .modal-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem;
+    }
+
+    .modal-footer {
+      padding: 1rem 1.5rem;
+      background: var(--cream-dark);
+      border-top: 1px solid var(--cream-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-radius: 0 0 8px 8px;
+    }
+
+    .history-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.9rem 1rem;
+      border: 1px solid var(--cream-border);
+      border-radius: 5px;
+      margin-bottom: 0.6rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: var(--cream);
+    }
+    .history-item:hover {
+      background: var(--cream-dark);
+      border-color: var(--gold);
+      box-shadow: 0 2px 8px rgba(44, 24, 16, 0.08);
+    }
+
+    .history-score-mini {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 2px solid;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .history-score-mini.critical { border-color: var(--critical); background: var(--critical-bg); }
+    .history-score-mini.high     { border-color: var(--high);     background: var(--high-bg); }
+    .history-score-mini.medium   { border-color: var(--medium);   background: var(--medium-bg); }
+    .history-score-mini.low      { border-color: var(--low);      background: var(--low-bg); }
+    .history-score-mini.safe     { border-color: var(--safe);     background: var(--safe-bg); }
+
+    .history-score-mini .score-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .history-score-mini.critical .score-num { color: var(--critical); }
+    .history-score-mini.high     .score-num { color: var(--high); }
+    .history-score-mini.medium   .score-num { color: var(--medium); }
+    .history-score-mini.low      .score-num { color: var(--low); }
+    .history-score-mini.safe     .score-num { color: var(--safe); }
+
+    .history-info {
+      flex: 1;
+    }
+    .history-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.2rem;
+    }
+    .history-meta {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .btn-clear {
+      background: transparent;
+      border: 1px solid rgba(192, 57, 43, 0.4);
+      color: var(--critical);
+      padding: 0.4rem 0.9rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.82rem;
+      letter-spacing: 0.06em;
+      transition: all 0.2s;
+    }
+    .btn-clear:hover { background: var(--critical-bg); }
+
+    .empty-history {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+    }
+    .empty-history p { font-size: 0.95rem; }
+
+    .error-panel {
+      background: var(--critical-bg);
+      border: 1px solid rgba(192, 57, 43, 0.3);
+      border-radius: 6px;
+      padding: 1.25rem;
+      margin: 1.5rem;
+    }
+    .error-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem;
+      color: var(--critical);
+      margin-bottom: 0.5rem;
+    }
+    .error-detail {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--text-primary);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--cream-dark); }
+    ::-webkit-scrollbar-thumb { background: var(--cream-border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--brown-light); }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-left">
+    <div class="shield-logo">🛡</div>
+    <div class="brand-text">
+      <h1>AuditShield</h1>
+      <span>Verifiable Smart Contract Security</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="network-badge">
+      <span class="network-dot"></span>
+      Base Sepolia
+    </div>
+    <button class="btn-history" onclick="openHistory()">History</button>
+    <div class="opg-balance" id="opgBalance">⬡ <span id="opgBalanceAmt">0</span> OPG</div>
+    <button class="btn-connect" id="connectBtn" onclick="connectWallet()">Connect Wallet</button>
+  </div>
+</header>
+
+<!-- NETWORK WARNING -->
+<div id="networkWarning">
+  ⚠ You are not on Base Sepolia. Switch networks to submit audits on-chain.
+  <button onclick="switchToBaseSepolia()">Switch Network</button>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-tag">POWERED BY OPENGRADIENT x402 · CLAUDE SONNET · BASE SEPOLIA</div>
+  <h2>Audit Smarter.<br/><em>Trust the Proof.</em></h2>
+  <p>TEE-verified AI inference on every audit. Permanent on-chain records. Wallet-scoped history. No trust required.</p>
+  <div class="hero-stats">
+    <div class="stat-item">
+      <span class="stat-label">Inference</span>
+      <span class="stat-value">x402 Powered</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">Model</span>
+      <span class="stat-value">Claude Sonnet</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">Registry</span>
+      <span class="stat-value">On-Chain Record</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">History</span>
+      <span class="stat-value">Wallet-Scoped</span>
+    </div>
+  </div>
+</section>
+
+<!-- MAIN -->
+<main>
+  <!-- LEFT: Input -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">Contract Input</span>
+      <span class="panel-badge">OpenGradient x402</span>
+    </div>
+    <div class="panel-body">
+      <div class="form-group">
+        <label for="contractName">Contract Name</label>
+        <input type="text" id="contractName" placeholder="MyToken.sol" />
+      </div>
+      <div class="form-group">
+        <label for="chainSelect">Blockchain / Chain</label>
+        <select id="chainSelect">
+          <option value="Ethereum">Ethereum</option>
+          <option value="Base">Base</option>
+          <option value="Base Sepolia">Base Sepolia</option>
+          <option value="Polygon">Polygon</option>
+          <option value="Arbitrum">Arbitrum</option>
+          <option value="Optimism">Optimism</option>
+          <option value="Avalanche">Avalanche</option>
+          <option value="BNB Chain">BNB Chain</option>
+          <option value="Solana">Solana</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="contractCode">Contract Code</label>
+        <textarea id="contractCode" placeholder="// Paste your Solidity or Rust smart contract here..."></textarea>
+        <div class="char-hint">Solidity, Rust (Anchor), or any EVM-compatible contract</div>
+      </div>
+      <div class="form-group">
+        <label for="additionalContext">Additional Context <span style="font-style:italic;font-weight:400;">(optional)</span></label>
+        <textarea id="additionalContext" class="context-area" placeholder="Any relevant context: intended behavior, known risks, deployment environment..."></textarea>
+      </div>
+      <button class="btn-audit" id="auditBtn" onclick="initiateAudit()">
+        <span>🔍</span> INITIATE AUDIT
+      </button>
+    </div>
+    <div class="panel-footer">
+      OpenGradient x402 · Claude Sonnet 4.6 · On-Chain Registry · Wallet-Scoped History
+    </div>
+  </div>
+
+  <!-- RIGHT: Results -->
+  <div class="panel" id="resultsPanel">
+    <div class="panel-header">
+      <span class="panel-title">Audit Results</span>
+      <span class="panel-badge" id="resultsBadge">Awaiting Input</span>
+    </div>
+
+    <!-- Empty state -->
+    <div class="results-empty" id="stateEmpty">
+      <div class="shield-icon-large">🛡</div>
+      <h3>Awaiting Contract</h3>
+      <p>Paste your smart contract code and click Initiate Audit to begin TEE-verified analysis.</p>
+    </div>
+
+    <!-- Loading state -->
+    <div class="results-loading" id="stateLoading" style="display:none">
+      <div class="loader-rings">
+        <div class="loader-inner">🔍</div>
+      </div>
+      <div class="loading-title">Scanning Contract...</div>
+      <div class="audit-log" id="auditLog"></div>
+    </div>
+
+    <!-- Error state -->
+    <div id="stateError" style="display:none">
+      <div class="error-panel">
+        <div class="error-title">Audit Failed</div>
+        <div class="error-detail" id="errorDetail"></div>
+      </div>
+    </div>
+
+    <!-- Results state -->
+    <div class="results-content" id="stateResults" style="display:none">
+
+      <!-- Score -->
+      <div class="score-section">
+        <div class="score-circle" id="scoreCircle">
+          <span class="score-num" id="scoreNum">—</span>
+          <span class="score-label">Score</span>
+        </div>
+        <div class="score-info">
+          <h3 id="resultContractName">Contract Name</h3>
+          <div class="score-meta">
+            <span class="chain-badge" id="resultChain">Chain</span>
+            <span class="timestamp-text" id="resultTimestamp"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Severity pills -->
+      <div class="severity-pills" id="severityPills"></div>
+
+      <!-- TEE Attestation -->
+      <div class="tee-box" id="teeBox">
+        <div class="tee-header">
+          <span class="tee-label">OpenGradient TEE Attestation</span>
+          <span class="tee-verified">✓ Verified</span>
+        </div>
+        <div class="tee-id" id="teeId"></div>
+        <div id="txLinkContainer"></div>
+      </div>
+
+      <!-- On-chain confirm -->
+      <div class="onchain-confirm" id="onchainConfirm" style="display:none">
+        ✓ Recorded on Base Sepolia
+      </div>
+
+      <!-- Findings -->
+      <div class="findings-section">
+        <div class="section-title">Security Findings</div>
+        <div id="findingsList"></div>
+      </div>
+
+      <!-- Executive summary -->
+      <div class="executive-summary">
+        <div class="section-title" style="margin-bottom:0.5rem;">Executive Summary</div>
+        <div class="exec-text" id="execSummary"></div>
+      </div>
+
+      <!-- Positive findings -->
+      <div id="positivesSection" style="display:none;">
+        <div class="section-title">Security Strengths</div>
+        <ul class="positives-list" id="positivesList"></ul>
+      </div>
+
+      <button class="btn-view-history" onclick="openHistory()">View Audit History</button>
+    </div>
+  </div>
+</main>
+
+<!-- HISTORY MODAL -->
+<div class="modal-overlay" id="historyModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Audit History</span>
+      <button class="modal-close" onclick="closeHistory()">×</button>
+    </div>
+    <div class="modal-body" id="historyBody"></div>
+    <div class="modal-footer">
+      <span style="font-size:0.8rem;color:var(--text-muted);" id="historyCount">0 audits</span>
+      <button class="btn-clear" onclick="clearHistory()">Clear History</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── Constants ──
+  const CONTRACT_ADDRESS = "0x8ee076D6a063f6d5c73387527b0DE2Ea65babe99";
+  const BASE_SEPOLIA_CHAIN_ID = 84532;
+  const BASE_SEPOLIA_RPC = "https://sepolia.base.org";
+  const EXPLORER_URL = "https://sepolia.basescan.org";
+  const BACKEND_URL = "http://localhost:3001";
+
+  const CONTRACT_ABI = [
+    "function submitAudit(bytes32 auditHash, string contractName, string chain, uint8 score, string riskLevel, string teeAttestation) returns (uint256)",
+    "function getMyAudits() view returns (tuple(bytes32 auditHash, string contractName, string chain, uint8 score, string riskLevel, string teeAttestation, uint256 timestamp)[])",
+    "function getMyAuditCount() view returns (uint256)"
+  ];
+
+  const OPG_TOKEN_ADDRESS = "0x240b09731D96979f50B2C649C9CE10FcF9C7987F";
+  const OPG_TOKEN_ABI = [
+    "function approve(address spender, uint256 amount) returns (bool)",
+    "function allowance(address owner, address spender) view returns (uint256)",
+    "function balanceOf(address account) view returns (uint256)"
+  ];
+  const OPG_PAYMENT_AMOUNT = ethers.parseUnits("0.1", 18);
+
+  // ── State ──
+  let walletAddress = null;
+  let currentAuditData = null;
+
+  // ── Wallet ──
+  async function connectWallet() {
+    if (!window.ethereum) {
+      alert("Please install MetaMask to use AuditShield.");
+      return;
+    }
+    try {
+      const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+      walletAddress = accounts[0];
+      const btn = document.getElementById("connectBtn");
+      btn.textContent = walletAddress.slice(0, 6) + "..." + walletAddress.slice(-4);
+      btn.classList.add("connected");
+      await checkNetwork();
+      updateOPGBalance();
+    } catch (e) {
+      console.error("Wallet connect error:", e);
+    }
+  }
+
+  async function updateOPGBalance() {
+    const balEl = document.getElementById("opgBalance");
+    const amtEl = document.getElementById("opgBalanceAmt");
+    if (!walletAddress || !window.ethereum) {
+      balEl.classList.remove("visible");
+      return;
+    }
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const token = new ethers.Contract(OPG_TOKEN_ADDRESS, OPG_TOKEN_ABI, provider);
+      const raw = await token.balanceOf(walletAddress);
+      const formatted = parseFloat(ethers.formatUnits(raw, 18)).toFixed(2);
+      amtEl.textContent = formatted;
+      balEl.classList.add("visible");
+    } catch {
+      balEl.classList.remove("visible");
+    }
+  }
+
+  async function checkNetwork() {
+    if (!window.ethereum) return;
+    const chainIdHex = await window.ethereum.request({ method: "eth_chainId" });
+    const chainId = parseInt(chainIdHex, 16);
+    const warning = document.getElementById("networkWarning");
+    if (chainId !== BASE_SEPOLIA_CHAIN_ID) {
+      warning.style.display = "block";
+    } else {
+      warning.style.display = "none";
+    }
+  }
+
+  async function switchToBaseSepolia() {
+    try {
+      await window.ethereum.request({
+        method: "wallet_addEthereumChain",
+        params: [{
+          chainId: "0x14A34",
+          chainName: "Base Sepolia",
+          nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
+          rpcUrls: ["https://sepolia.base.org"],
+          blockExplorerUrls: ["https://sepolia.basescan.org/"]
+        }]
+      });
+      await checkNetwork();
+    } catch (e) {
+      console.error("Network switch error:", e);
+    }
+  }
+
+  if (window.ethereum) {
+    window.ethereum.on("accountsChanged", async (accounts) => {
+      if (accounts.length === 0) {
+        walletAddress = null;
+        const btn = document.getElementById("connectBtn");
+        btn.textContent = "Connect Wallet";
+        btn.classList.remove("connected");
+        document.getElementById("opgBalance").classList.remove("visible");
+      } else {
+        walletAddress = accounts[0];
+        const btn = document.getElementById("connectBtn");
+        btn.textContent = walletAddress.slice(0, 6) + "..." + walletAddress.slice(-4);
+        btn.classList.add("connected");
+        updateOPGBalance();
+      }
+    });
+    window.ethereum.on("chainChanged", () => { checkNetwork(); updateOPGBalance(); });
+    // Auto-connect if already authorized
+    window.ethereum.request({ method: "eth_accounts" }).then(accounts => {
+      if (accounts.length > 0) {
+        walletAddress = accounts[0];
+        const btn = document.getElementById("connectBtn");
+        btn.textContent = walletAddress.slice(0, 6) + "..." + walletAddress.slice(-4);
+        btn.classList.add("connected");
+        checkNetwork();
+        updateOPGBalance();
+      }
+    });
+  }
+
+  // ── Score helpers ──
+  function getScoreClass(score) {
+    if (score <= 25) return "critical";
+    if (score <= 50) return "high";
+    if (score <= 70) return "medium";
+    if (score <= 85) return "low";
+    return "safe";
+  }
+
+  function getRiskLabel(cls) {
+    return { critical: "CRITICAL", high: "HIGH", medium: "MEDIUM", low: "LOW", safe: "SAFE" }[cls];
+  }
+
+  // ── Loading log ──
+  function initLog() {
+    document.getElementById("auditLog").innerHTML = "";
+  }
+
+  function appendLog(text) {
+    const log = document.getElementById("auditLog");
+    // Remove cursor if present
+    const oldCursor = log.querySelector(".cursor-blink");
+    if (oldCursor) oldCursor.remove();
+    // Dim all previous lines
+    Array.from(log.querySelectorAll(".audit-log-line")).forEach(l => l.classList.add("dim"));
+    const line = document.createElement("div");
+    line.className = "audit-log-line";
+    line.textContent = text;
+    log.appendChild(line);
+    requestAnimationFrame(() => requestAnimationFrame(() => line.classList.add("visible")));
+    // Re-add cursor after new line
+    const cursor = document.createElement("span");
+    cursor.className = "cursor-blink";
+    log.appendChild(cursor);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  // ── State switching ──
+  function showState(state) {
+    document.getElementById("stateEmpty").style.display = "none";
+    document.getElementById("stateLoading").style.display = "none";
+    document.getElementById("stateError").style.display = "none";
+    document.getElementById("stateResults").style.display = "none";
+
+    const badge = document.getElementById("resultsBadge");
+    if (state === "empty") {
+      document.getElementById("stateEmpty").style.display = "block";
+      badge.textContent = "Awaiting Input";
+    } else if (state === "loading") {
+      document.getElementById("stateLoading").style.display = "block";
+      badge.textContent = "Scanning...";
+    } else if (state === "error") {
+      document.getElementById("stateError").style.display = "block";
+      badge.textContent = "Error";
+    } else if (state === "results") {
+      document.getElementById("stateResults").style.display = "block";
+      badge.textContent = "Complete";
+    }
+  }
+
+  // ── Main audit flow ──
+  async function initiateAudit() {
+    const contractCode = document.getElementById("contractCode").value.trim();
+    const contractName = document.getElementById("contractName").value.trim();
+    const chain = document.getElementById("chainSelect").value;
+    const additionalContext = document.getElementById("additionalContext").value.trim();
+
+    // Validation
+    if (!walletAddress) {
+      alert("Please connect your wallet first.");
+      return;
+    }
+    if (!contractName) {
+      const el = document.getElementById("contractName");
+      el.classList.add("error-flash");
+      el.focus();
+      setTimeout(() => el.classList.remove("error-flash"), 1500);
+      return;
+    }
+    if (!contractCode) {
+      const el = document.getElementById("contractCode");
+      el.style.borderColor = "var(--critical)";
+      el.style.boxShadow = "0 0 0 3px rgba(192,57,43,0.12)";
+      el.focus();
+      setTimeout(() => { el.style.borderColor = ""; el.style.boxShadow = ""; }, 1500);
+      return;
+    }
+
+    const btn = document.getElementById("auditBtn");
+    btn.disabled = true;
+    btn.innerHTML = '<span>⏳</span> AUDITING...';
+    showState("loading");
+    initLog();
+
+    let approveTxHash = null;
+    let txHash = null;
+    let auditResult = null;
+    let teeAttestation = null;
+
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+
+      // ── Check OPG balance ──
+      appendLog("> Checking $OPG balance...");
+      await checkOPGBalance(signer, walletAddress);
+      appendLog("> $OPG balance sufficient ✓");
+
+      // ── POPUP 1: Approve OPG payment ──
+      approveTxHash = await approveOPGPayment(signer);
+
+      // ── Call backend for AI audit ──
+      appendLog("> Connecting to OpenGradient network...");
+      appendLog("> Initializing TEE environment...");
+      appendLog("> Running x402 LLM inference...");
+
+      const response = await fetch(`${BACKEND_URL}/api/audit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contractCode, contractName, chain, additionalContext })
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.details || data.error || "Backend audit failed");
+      }
+      auditResult = data.auditResult;
+      teeAttestation = data.teeAttestation;
+
+      appendLog("> Generating attestation proof...");
+      appendLog("> Compiling audit report...");
+
+      // ── POPUP 2: Record audit on-chain ──
+      try {
+        txHash = await submitAuditOnChain(auditResult, teeAttestation, contractName, chain, signer);
+      } catch (txErr) {
+        const rejected = txErr.code === 4001 || txErr.code === "ACTION_REJECTED" || txErr.message?.toLowerCase().includes("rejected");
+        if (rejected) {
+          appendLog("> Transaction rejected — results shown below");
+        } else {
+          appendLog("> On-chain record skipped: " + txErr.message);
+        }
+      }
+
+      appendLog("> Complete ✓");
+
+      currentAuditData = { auditResult, teeAttestation, contractName, chain };
+      saveToHistory({ auditResult, teeAttestation, contractName, chain, txHash, approveTxHash });
+      renderResults(auditResult, teeAttestation, contractName, chain, txHash, approveTxHash);
+      updateOPGBalance();
+
+    } catch (err) {
+      showState("error");
+      document.getElementById("errorDetail").textContent = err.message || String(err);
+      // If we have audit results already, still show them
+      if (auditResult) {
+        saveToHistory({ auditResult, teeAttestation, contractName, chain, txHash, approveTxHash });
+        renderResults(auditResult, teeAttestation, contractName, chain, txHash, approveTxHash);
+      }
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<span>🔍</span> INITIATE AUDIT';
+    }
+  }
+
+  // ── OPG balance check ──
+  async function checkOPGBalance(signer, address) {
+    const token = new ethers.Contract(OPG_TOKEN_ADDRESS, OPG_TOKEN_ABI, signer);
+    const balance = await token.balanceOf(address);
+    if (balance < OPG_PAYMENT_AMOUNT) {
+      const fmt = parseFloat(ethers.formatUnits(balance, 18)).toFixed(4);
+      throw new Error(`Insufficient $OPG balance (have ${fmt} OPG, need 0.1 OPG). Get tokens from https://faucet.opengradient.ai`);
+    }
+    return balance;
+  }
+
+  // ── POPUP 1: Approve OPG payment ──
+  async function approveOPGPayment(signer) {
+    const token = new ethers.Contract(OPG_TOKEN_ADDRESS, OPG_TOKEN_ABI, signer);
+    const signerAddress = await signer.getAddress();
+
+    // Check existing allowance — skip popup if already sufficient
+    const existing = await token.allowance(signerAddress, CONTRACT_ADDRESS);
+    if (existing >= OPG_PAYMENT_AMOUNT) {
+      appendLog("> $OPG allowance already approved ✓");
+      return null;
+    }
+
+    appendLog("> Requesting $OPG payment approval... (confirm in MetaMask)");
+    const tx = await token.approve(CONTRACT_ADDRESS, OPG_PAYMENT_AMOUNT);
+    appendLog("> Waiting for approval confirmation...");
+    await tx.wait();
+    appendLog("> $OPG payment approved ✓");
+    return tx.hash;
+  }
+
+  // ── POPUP 2: Submit audit on-chain ──
+  async function submitAuditOnChain(auditResult, teeAttestation, contractName, chain, signer) {
+    const registry = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+    const auditHash = ethers.keccak256(ethers.toUtf8Bytes(JSON.stringify(auditResult)));
+    const score = Math.min(255, Math.max(0, auditResult.overall_score));
+    appendLog("> Recording audit on Base Sepolia... (confirm in MetaMask)");
+    const tx = await registry.submitAudit(
+      auditHash, contractName, chain, score,
+      auditResult.risk_level, teeAttestation
+    );
+    appendLog("> Waiting for transaction confirmation...");
+    const receipt = await tx.wait();
+    appendLog("> Audit recorded on-chain ✓");
+    return receipt.hash;
+  }
+
+  // ── Render results ──
+  function renderResults(auditResult, teeAttestation, contractName, chain, txHash, approveTxHash) {
+    const scoreClass = getScoreClass(auditResult.overall_score);
+
+    // Score circle
+    const circle = document.getElementById("scoreCircle");
+    circle.className = "score-circle " + scoreClass;
+    document.getElementById("scoreNum").textContent = auditResult.overall_score;
+
+    // Contract info
+    document.getElementById("resultContractName").textContent = contractName;
+    document.getElementById("resultChain").textContent = chain;
+    const ts = auditResult.audit_metadata?.audit_timestamp || new Date().toISOString();
+    document.getElementById("resultTimestamp").textContent = new Date(ts).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+
+    // Severity pills
+    const findings = auditResult.findings || [];
+    const counts = { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0, INFO: 0 };
+    findings.forEach(f => { if (counts[f.severity] !== undefined) counts[f.severity]++; });
+    const pillsEl = document.getElementById("severityPills");
+    pillsEl.innerHTML = "";
+    Object.entries(counts).forEach(([sev, count]) => {
+      if (count > 0) {
+        const pill = document.createElement("span");
+        pill.className = "pill " + sev.toLowerCase();
+        pill.textContent = `${count} ${sev}`;
+        pillsEl.appendChild(pill);
+      }
+    });
+
+    // TEE box
+    document.getElementById("teeId").textContent = teeAttestation;
+    const txContainer = document.getElementById("txLinkContainer");
+    let txHtml = "";
+    if (approveTxHash) {
+      txHtml += `<div style="margin-bottom:0.35rem;"><span style="font-size:0.65rem;color:var(--text-muted);font-family:'Cormorant Garamond',serif;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;">OPG Approval</span><br/><a class="tx-link" href="${EXPLORER_URL}/tx/${approveTxHash}" target="_blank">🔗 ${approveTxHash.slice(0,10)}...${approveTxHash.slice(-8)} ↗</a></div>`;
+    }
+    if (txHash) {
+      txHtml += `<div><span style="font-size:0.65rem;color:var(--text-muted);font-family:'Cormorant Garamond',serif;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;">Registry Tx</span><br/><a class="tx-link" href="${EXPLORER_URL}/tx/${txHash}" target="_blank">🔗 ${txHash.slice(0,10)}...${txHash.slice(-8)} ↗</a></div>`;
+      document.getElementById("onchainConfirm").style.display = "flex";
+    } else {
+      document.getElementById("onchainConfirm").style.display = "none";
+    }
+    if (!txHtml) {
+      txHtml = '<span style="font-size:0.75rem;color:var(--text-muted);font-family:\'Cormorant Garamond\',serif;">Connect wallet to record on-chain</span>';
+    }
+    txContainer.innerHTML = txHtml;
+
+    // Findings list
+    const findingsEl = document.getElementById("findingsList");
+    findingsEl.innerHTML = "";
+    if (findings.length === 0) {
+      findingsEl.innerHTML = '<p style="color:var(--text-muted);font-size:0.9rem;padding:0.5rem 0;">No findings reported.</p>';
+    } else {
+      findings.forEach((f, i) => {
+        const card = document.createElement("div");
+        card.className = "finding-card";
+        const sevLower = (f.severity || "info").toLowerCase();
+        card.innerHTML = `
+          <div class="finding-header" onclick="toggleFinding(this.parentElement)">
+            <span class="finding-sev ${sevLower}">${f.severity}</span>
+            <span class="finding-title">${escHtml(f.title)}</span>
+            <span class="finding-id">${escHtml(f.id || "FINDING-" + String(i+1).padStart(3,"0"))}</span>
+            <span class="finding-chevron">▼</span>
+          </div>
+          <div class="finding-body">
+            <div class="finding-field">
+              <div class="finding-field-label">Description</div>
+              <div class="finding-field-value">${escHtml(f.description)}</div>
+            </div>
+            <div class="finding-field">
+              <div class="finding-field-label">Impact</div>
+              <div class="finding-field-value">${escHtml(f.impact)}</div>
+            </div>
+            <div class="finding-field">
+              <div class="finding-field-label">Affected Code</div>
+              <div class="code-snippet">${escHtml(f.affected_code)}</div>
+            </div>
+            <div class="finding-field">
+              <div class="finding-field-label">Recommendation</div>
+              <div class="finding-field-value">${escHtml(f.recommendation)}</div>
+            </div>
+          </div>
+        `;
+        findingsEl.appendChild(card);
+        // Auto-expand first critical/high
+        if (i === 0 && ["CRITICAL","HIGH"].includes(f.severity)) {
+          card.classList.add("expanded");
+        }
+      });
+    }
+
+    // Executive summary
+    document.getElementById("execSummary").textContent = auditResult.executive_summary || "";
+
+    // Positive findings
+    const positives = auditResult.positive_findings || [];
+    const posSection = document.getElementById("positivesSection");
+    const posList = document.getElementById("positivesList");
+    if (positives.length > 0) {
+      posList.innerHTML = positives.map(p => `<li>${escHtml(p)}</li>`).join("");
+      posSection.style.display = "block";
+    } else {
+      posSection.style.display = "none";
+    }
+
+    showState("results");
+  }
+
+  function toggleFinding(card) {
+    card.classList.toggle("expanded");
+  }
+
+  function escHtml(s) {
+    if (!s) return "";
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  // ── LocalStorage history ──
+  function getHistoryKey() {
+    return walletAddress
+      ? `auditshield_${walletAddress.toLowerCase()}`
+      : "auditshield_anonymous";
+  }
+
+  function getHistory() {
+    try {
+      return JSON.parse(localStorage.getItem(getHistoryKey()) || "[]");
+    } catch { return []; }
+  }
+
+  function saveToHistory({ auditResult, teeAttestation, contractName, chain, txHash, approveTxHash }) {
+    const history = getHistory();
+    history.unshift({
+      id: Date.now().toString(),
+      contractName,
+      chain,
+      auditData: auditResult,
+      txHash,
+      approveTxHash,
+      teeAttestation,
+      timestamp: Date.now()
+    });
+    localStorage.setItem(getHistoryKey(), JSON.stringify(history.slice(0, 50)));
+  }
+
+  function openHistory() {
+    const history = getHistory();
+    const body = document.getElementById("historyBody");
+    const countEl = document.getElementById("historyCount");
+    countEl.textContent = `${history.length} audit${history.length !== 1 ? "s" : ""}`;
+
+    if (history.length === 0) {
+      body.innerHTML = `<div class="empty-history"><p>No audits found for this wallet.</p><p style="margin-top:0.5rem;font-size:0.82rem;">Run your first audit to see it here.</p></div>`;
+    } else {
+      body.innerHTML = history.map(item => {
+        const sc = getScoreClass(item.auditData?.overall_score ?? 0);
+        const date = new Date(item.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+        return `
+          <div class="history-item" onclick="loadHistoryItem('${item.id}')">
+            <div class="history-score-mini ${sc}">
+              <span class="score-num">${item.auditData?.overall_score ?? "?"}</span>
+            </div>
+            <div class="history-info">
+              <div class="history-name">${escHtml(item.contractName)}</div>
+              <div class="history-meta">${escHtml(item.chain)} · ${date} · ${item.auditData?.risk_level || ""}</div>
+            </div>
+            <span style="color:var(--text-muted);font-size:0.8rem;">↗</span>
+          </div>
+        `;
+      }).join("");
+    }
+
+    document.getElementById("historyModal").classList.add("open");
+  }
+
+  function closeHistory() {
+    document.getElementById("historyModal").classList.remove("open");
+  }
+
+  function loadHistoryItem(id) {
+    const history = getHistory();
+    const item = history.find(h => h.id === id);
+    if (!item) return;
+    closeHistory();
+    renderResults(item.auditData, item.teeAttestation, item.contractName, item.chain, item.txHash, item.approveTxHash);
+  }
+
+  function clearHistory() {
+    if (!confirm("Clear all audit history for this wallet? This cannot be undone.")) return;
+    localStorage.removeItem(getHistoryKey());
+    closeHistory();
+  }
+
+  // Close modal on overlay click
+  document.getElementById("historyModal").addEventListener("click", function(e) {
+    if (e.target === this) closeHistory();
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+node_modules/
+.env
+.env.local
+*.env
+.env.*
+
+# Hardhat
+cache/
+artifacts/
+
+# OS
+.DS_Store
+Thumbs.db

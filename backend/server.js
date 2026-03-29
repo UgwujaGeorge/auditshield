@@ -6,7 +6,11 @@ import fetch from "node-fetch";
 dotenv.config();
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type']
+}));
 app.use(express.json({ limit: "2mb" }));
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;

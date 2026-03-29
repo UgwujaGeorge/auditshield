@@ -119,4 +119,7 @@ Provide your complete security audit as a JSON object only.`;
 app.get("/health", (req, res) => res.json({ status: "ok" }));
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => console.log(`AuditShield backend running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`AuditShield backend running on port ${PORT}`);
+  console.log(`Server listening on port ${PORT}`);
+});

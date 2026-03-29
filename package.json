@@ -6,6 +6,7 @@
   "scripts": {
     "start": "concurrently \"npm run backend\" \"npm run frontend\"",
     "backend": "node backend/server.js",
+    "railway": "node backend/server.js",
     "frontend": "npx serve . -p 3000",
     "deploy": "hardhat run scripts/deploy.js --network baseSepolia"
   },

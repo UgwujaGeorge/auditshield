@@ -51,17 +51,22 @@ llm: og.LLM = None
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global llm
-    llm = og.LLM(
-        private_key=os.environ.get("PRIVATE_KEY"),
-        rpc_url="https://ogevmdevnet.opengradient.ai",
-        tee_registry_address="0x4e72238852f3c918f4E4e57AeC9280dDB0c80248",
-    )
     try:
-        llm.ensure_opg_approval(min_allowance=0.1)
-        print("OpenGradient LLM initialized and OPG approval confirmed.")
-    except ValueError as e:
-        print(f"WARNING: OPG approval check failed: {e}")
-        print("Wallet may have insufficient OPG. Fund at https://faucet.opengradient.ai/ if inference fails.")
+        llm = og.LLM(
+            private_key=os.environ.get("PRIVATE_KEY"),
+            rpc_url="https://ogevmdevnet.opengradient.ai",
+            tee_registry_address="0x4e72238852f3c918f4E4e57AeC9280dDB0c80248",
+        )
+        try:
+            llm.ensure_opg_approval(min_allowance=0.1)
+            print("OpenGradient LLM initialized and OPG approval confirmed.")
+        except ValueError as e:
+            print(f"WARNING: OPG approval check failed: {e}")
+            print("Wallet may have insufficient OPG. Fund at https://faucet.opengradient.ai/ if inference fails.")
+    except Exception as e:
+        print(f"ERROR: Failed to initialize OpenGradient LLM: {e}")
+        print("Server will start but /api/audit will return 503 until PRIVATE_KEY is set correctly.")
+        llm = None
     yield
 
 
@@ -84,6 +89,8 @@ class AuditRequest(BaseModel):
 
 @app.post("/api/audit")
 async def audit_contract(req: AuditRequest):
+    if llm is None:
+        raise HTTPException(status_code=503, detail="OpenGradient LLM not initialized. Check PRIVATE_KEY environment variable.")
     if not req.contractCode or not req.contractName:
         raise HTTPException(status_code=400, detail="Contract code and name are required")
 

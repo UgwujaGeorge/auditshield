@@ -75,8 +75,8 @@ app = FastAPI(title="AuditShield API", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_methods=["GET", "POST"],
-    allow_headers=["Content-Type"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -107,26 +107,45 @@ Contract Code:
 
 Provide your complete security audit as a JSON object only."""
 
-    result = await llm.chat(
-        model=og.TEE_LLM.CLAUDE_HAIKU_4_5,
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": user_prompt},
-        ],
-        max_tokens=4000,
-        temperature=0.1,
-    )
+    try:
+        result = await llm.chat(
+            model=og.TEE_LLM.CLAUDE_HAIKU_4_5,
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": user_prompt},
+            ],
+            max_tokens=4000,
+            temperature=0.1,
+        )
+    except Exception as e:
+        print(f"ERROR: llm.chat() failed: {e}")
+        raise HTTPException(status_code=502, detail=f"OpenGradient inference failed: {str(e)}")
 
-    raw_text = result.chat_output["content"]
+    try:
+        raw_text = result.chat_output["content"]
+    except (KeyError, TypeError, AttributeError) as e:
+        print(f"ERROR: Unexpected result structure: {result!r} — {e}")
+        raise HTTPException(status_code=502, detail=f"Unexpected response structure from OpenGradient: {str(e)}")
+
     clean_json = raw_text.replace("```json\n", "").replace("```json", "").replace("```\n", "").replace("```", "").strip()
-    audit_result = json.loads(clean_json)
+    try:
+        audit_result = json.loads(clean_json)
+    except json.JSONDecodeError as e:
+        print(f"ERROR: JSON parse failed. Raw text: {raw_text!r}")
+        raise HTTPException(status_code=502, detail=f"LLM returned non-JSON response: {str(e)}")
+
+    tee_attestation = (
+        getattr(result, "payment_hash", None)
+        or getattr(result, "transaction_hash", None)
+        or f"OG-TEE-{getattr(result, 'tee_id', 'unknown')}"
+    )
 
     return {
         "success": True,
         "auditResult": audit_result,
-        "teeAttestation": result.payment_hash or result.transaction_hash or f"OG-TEE-{result.tee_id}",
-        "teeSignature": result.tee_signature,
-        "teeTimestamp": result.tee_timestamp,
+        "teeAttestation": tee_attestation,
+        "teeSignature": getattr(result, "tee_signature", None),
+        "teeTimestamp": getattr(result, "tee_timestamp", None),
         "model": str(og.TEE_LLM.CLAUDE_HAIKU_4_5),
         "inferenceProvider": "OpenGradient TEE",
     }

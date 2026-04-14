@@ -52,15 +52,11 @@ llm: og.LLM = None
 async def lifespan(app: FastAPI):
     global llm
     try:
-        llm = og.LLM(
-            private_key=os.environ.get("PRIVATE_KEY"),
-            rpc_url="https://ogevmdevnet.opengradient.ai",
-            tee_registry_address="0x4e72238852f3c918f4E4e57AeC9280dDB0c80248",
-        )
+        llm = og.LLM(private_key=os.environ.get("PRIVATE_KEY"))
         try:
-            llm.ensure_opg_approval(min_allowance=0.1)
-            print("OpenGradient LLM initialized and OPG approval confirmed.")
-        except ValueError as e:
+            result = llm.ensure_opg_approval(min_allowance=5)
+            print(f"OpenGradient LLM initialized. OPG allowance: {result.allowance_after}")
+        except Exception as e:
             print(f"WARNING: OPG approval check failed: {e}")
             print("Wallet may have insufficient OPG. Fund at https://faucet.opengradient.ai/ if inference fails.")
     except Exception as e:
@@ -106,6 +102,11 @@ Contract Code:
 ```
 
 Provide your complete security audit as a JSON object only."""
+
+    try:
+        llm.ensure_opg_approval(min_allowance=5)
+    except Exception as e:
+        print(f"WARNING: pre-call OPG approval failed: {e}")
 
     try:
         result = await llm.chat(

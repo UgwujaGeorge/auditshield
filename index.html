@@ -1576,7 +1576,7 @@
       });
       const data = await response.json();
       if (!response.ok || !data.success) {
-        throw new Error(data.details || data.error || "Backend audit failed");
+        throw new Error(data.detail || data.details || data.error || data.message || `Backend error ${response.status}`);
       }
       auditResult = data.auditResult;
       teeAttestation = data.teeAttestation;
